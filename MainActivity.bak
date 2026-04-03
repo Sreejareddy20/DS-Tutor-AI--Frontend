@@ -1,0 +1,490 @@
+package com.simats.dstutorai
+
+import android.os.Bundle
+import android.widget.Toast
+import androidx.activity.ComponentActivity
+import androidx.activity.compose.setContent
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Surface
+import androidx.compose.runtime.*
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
+import com.simats.dstutorai.ui.*
+import com.simats.dstutorai.ui.theme.DSTutorAITheme
+
+enum class AppScreen {
+    Splash,
+    Onboarding1,
+    Onboarding2,
+    Onboarding3,
+    Onboarding4,
+    Onboarding5,
+    Welcome,
+    SignIn,
+    Register,
+    VerifyAccount,
+    VerificationSuccess,
+    ForgotPassword,
+    VerifyEmail,
+    ResetPassword,
+    Chat,
+    ChatHistory,
+    NewChat,
+    Topics,
+    TopicDetail,
+    CodeGenerator,
+    Profile,
+    EditProfile,
+    Settings,
+    LanguageSelection,
+    ClearChatHistory,
+    LogoutConfirm,
+    DeleteAccountConfirm,
+    Visualizer,
+    StackVisualizer,
+    QueueVisualizer,
+    LinkedListVisualizer,
+    BinaryTreeVisualizer,
+    BSTVisualizer,
+    GraphVisualizer,
+    SortingVisualizer,
+    BinarySearchVisualizer,
+    HeapVisualizer,
+    Practice,
+    QuizContent,
+    QuizResult
+}
+
+class MainActivity : ComponentActivity() {
+    override fun onCreate(savedInstanceState: Bundle?) {
+        super.onCreate(savedInstanceState)
+        setContent {
+            DSTutorAITheme {
+                Surface(
+                    modifier = Modifier.fillMaxSize(),
+                    color = MaterialTheme.colorScheme.background
+                ) {
+                    AppNavigation()
+                }
+            }
+        }
+    }
+}
+
+@Composable
+fun AppNavigation() {
+    var currentScreen by remember { mutableStateOf(AppScreen.Splash) }
+    var selectedTopic by remember { mutableStateOf<Topic?>(null) }
+    var selectedTopicName by remember { mutableStateOf("Stack") }
+    var selectedDifficulty by remember { mutableStateOf("Medium") }
+    var selectedLanguage by remember { mutableStateOf("English") }
+    var quizQuestions by remember { mutableStateOf<List<QuizQuestion>>(emptyList()) }
+    
+    val context = LocalContext.current
+    
+    // Mock chat history
+    val chatHistory = remember { mutableStateListOf<ChatHistoryItem>() }
+
+    Surface(modifier = Modifier.fillMaxSize()) {
+        when (currentScreen) {
+            AppScreen.Splash -> SplashScreen(
+                onTimeout = { currentScreen = AppScreen.Onboarding1 }
+            )
+            AppScreen.Onboarding1 -> {
+                OnboardingScreen1(
+                    onSkipClick = { currentScreen = AppScreen.Welcome },
+                    onNextClick = { currentScreen = AppScreen.Onboarding2 }
+                )
+            }
+            AppScreen.Onboarding2 -> {
+                OnboardingScreen2(
+                    onSkipClick = { currentScreen = AppScreen.Welcome },
+                    onNextClick = { currentScreen = AppScreen.Onboarding3 }
+                )
+            }
+            AppScreen.Onboarding3 -> {
+                OnboardingScreen3(
+                    onSkipClick = { currentScreen = AppScreen.Welcome },
+                    onNextClick = { currentScreen = AppScreen.Onboarding4 }
+                )
+            }
+            AppScreen.Onboarding4 -> {
+                OnboardingScreen4(
+                    onSkipClick = { currentScreen = AppScreen.Welcome },
+                    onNextClick = { currentScreen = AppScreen.Onboarding5 }
+                )
+            }
+            AppScreen.Onboarding5 -> {
+                OnboardingScreen5(
+                    onSkipClick = { currentScreen = AppScreen.Welcome },
+                    onGetStartedClick = { currentScreen = AppScreen.Welcome }
+                )
+            }
+            AppScreen.Welcome -> {
+                WelcomeScreen(
+                    onSignInClick = { currentScreen = AppScreen.SignIn },
+                    onCreateAccountClick = { currentScreen = AppScreen.Register }
+                )
+            }
+            AppScreen.SignIn -> {
+                SignInScreen(
+                    onBackClick = { currentScreen = AppScreen.Welcome },
+                    onLoginClick = { _, _ -> currentScreen = AppScreen.Chat },
+                    onForgotPasswordClick = { currentScreen = AppScreen.ForgotPassword },
+                    onRegisterClick = { currentScreen = AppScreen.Register }
+                )
+            }
+            AppScreen.Register -> {
+                RegisterScreen(
+                    onBackClick = { currentScreen = AppScreen.Welcome },
+                    onRegisterClick = { currentScreen = AppScreen.VerifyAccount },
+                    onSignInClick = { currentScreen = AppScreen.SignIn }
+                )
+            }
+            AppScreen.VerifyAccount -> {
+                VerifyAccountScreen(
+                    onBackClick = { currentScreen = AppScreen.Register },
+                    onVerifyClick = { _ ->
+                        currentScreen = AppScreen.VerificationSuccess
+                    },
+                    onResendClick = {
+                        // Handle resend logic
+                    }
+                )
+            }
+            AppScreen.VerificationSuccess -> {
+                VerificationSuccessScreen(
+                    onContinueClick = { currentScreen = AppScreen.SignIn }
+                )
+            }
+            AppScreen.ForgotPassword -> {
+                ForgotPasswordScreen(
+                    onBackClick = { currentScreen = AppScreen.SignIn },
+                    onSendResetLinkClick = { _ ->
+                        currentScreen = AppScreen.VerifyEmail
+                    }
+                )
+            }
+            AppScreen.VerifyEmail -> {
+                VerifyEmailScreen(
+                    onBackClick = { currentScreen = AppScreen.ForgotPassword },
+                    onVerifyClick = { _ ->
+                        currentScreen = AppScreen.ResetPassword
+                    },
+                    onResendClick = {
+                        // Handle resend logic
+                    }
+                )
+            }
+            AppScreen.ResetPassword -> {
+                ResetPasswordScreen(
+                    onBackClick = { currentScreen = AppScreen.VerifyEmail },
+                    onResetSuccess = {
+                        currentScreen = AppScreen.SignIn
+                    }
+                )
+            }
+            AppScreen.Chat -> {
+                ChatScreen(
+                    onTopicsClick = { currentScreen = AppScreen.Topics },
+                    onVisualizerClick = { currentScreen = AppScreen.Visualizer },
+                    onPracticeClick = { currentScreen = AppScreen.Practice },
+                    onMenuClick = { currentScreen = AppScreen.ChatHistory },
+                    onProfileClick = { currentScreen = AppScreen.Profile }
+                )
+            }
+            AppScreen.ChatHistory -> {
+                ChatHistoryScreen(
+                    historyItems = chatHistory,
+                    onBackClick = { currentScreen = AppScreen.Chat },
+                    onStartNewChat = { currentScreen = AppScreen.NewChat }
+                )
+            }
+            AppScreen.NewChat -> {
+                NewChatScreen(
+                    onBackClick = { currentScreen = AppScreen.ChatHistory },
+                    onSuggestionClick = { _ ->
+                        currentScreen = AppScreen.Chat
+                    }
+                )
+            }
+            AppScreen.Topics -> {
+                TopicsScreen(
+                    onTopicClick = { topic ->
+                        selectedTopic = topic
+                        selectedTopicName = topic.name
+                        currentScreen = AppScreen.TopicDetail
+                    },
+                    onChatClick = { currentScreen = AppScreen.Chat },
+                    onVisualizerClick = { currentScreen = AppScreen.Visualizer },
+                    onPracticeClick = { currentScreen = AppScreen.Practice },
+                    onProfileClick = { currentScreen = AppScreen.Profile }
+                )
+            }
+            AppScreen.TopicDetail -> {
+                selectedTopic?.let { topic ->
+                    TopicDetailScreen(
+                        topic = topic,
+                        onBackClick = { currentScreen = AppScreen.Topics },
+                        onVisualizeClick = { currentScreen = AppScreen.Visualizer },
+                        onCodeClick = { currentScreen = AppScreen.CodeGenerator },
+                        onGenerateCodeClick = { currentScreen = AppScreen.CodeGenerator },
+                        onPracticeQuizClick = { currentScreen = AppScreen.Practice },
+                        onAskAIClick = { currentScreen = AppScreen.Chat },
+                        onChatClick = { currentScreen = AppScreen.Chat },
+                        onTopicsClick = { currentScreen = AppScreen.Topics },
+                        onVisualizerClick = { currentScreen = AppScreen.Visualizer },
+                        onPracticeClick = { currentScreen = AppScreen.Practice },
+                        onProfileClick = { currentScreen = AppScreen.Profile }
+                    )
+                } ?: run {
+                    currentScreen = AppScreen.Topics
+                }
+            }
+            AppScreen.CodeGenerator -> {
+                CodeGeneratorScreen(
+                    initialTopic = selectedTopic?.name ?: "Stack",
+                    onBackClick = { currentScreen = AppScreen.TopicDetail },
+                    onGenerateClick = { topic, language ->
+                        Toast.makeText(context, "Generating $topic code in $language", Toast.LENGTH_SHORT).show()
+                    }
+                )
+            }
+            AppScreen.Profile -> {
+                ProfileScreen(
+                    onChatClick = { currentScreen = AppScreen.Chat },
+                    onTopicsClick = { currentScreen = AppScreen.Topics },
+                    onVisualizerClick = { currentScreen = AppScreen.Visualizer },
+                    onPracticeClick = { currentScreen = AppScreen.Practice },
+                    onEditProfileClick = { currentScreen = AppScreen.EditProfile },
+                    onSettingsClick = { currentScreen = AppScreen.Settings },
+                    onLogoutClick = { currentScreen = AppScreen.LogoutConfirm }
+                )
+            }
+            AppScreen.EditProfile -> {
+                EditProfileScreen(
+                    onDismiss = { currentScreen = AppScreen.Profile },
+                    onSaveSuccess = {
+                        Toast.makeText(context, "Changes saved successfully", Toast.LENGTH_SHORT).show()
+                        currentScreen = AppScreen.Profile
+                    }
+                )
+            }
+            AppScreen.Settings -> {
+                SettingsScreen(
+                    selectedLanguage = selectedLanguage,
+                    onBackClick = { currentScreen = AppScreen.Profile },
+                    onLanguageClick = { currentScreen = AppScreen.LanguageSelection },
+                    onChatHistoryClick = { currentScreen = AppScreen.ChatHistory },
+                    onClearChatHistoryClick = { currentScreen = AppScreen.ClearChatHistory },
+                    onDeleteAccountClick = { currentScreen = AppScreen.DeleteAccountConfirm },
+                    onLogoutClick = { currentScreen = AppScreen.LogoutConfirm }
+                )
+            }
+            AppScreen.LanguageSelection -> {
+                LanguageSelectionScreen(
+                    selectedLanguage = selectedLanguage,
+                    onBackClick = { currentScreen = AppScreen.Settings },
+                    onLanguageSelected = { language ->
+                        selectedLanguage = language
+                        currentScreen = AppScreen.Settings
+                    }
+                )
+            }
+            AppScreen.ClearChatHistory -> {
+                SettingsScreen(
+                    selectedLanguage = selectedLanguage,
+                    onBackClick = { currentScreen = AppScreen.Profile },
+                    onLanguageClick = { currentScreen = AppScreen.LanguageSelection },
+                    onChatHistoryClick = { currentScreen = AppHistoryScreen },
+                    onClearChatHistoryClick = { currentScreen = AppScreen.ClearChatHistory },
+                    onDeleteAccountClick = { currentScreen = AppScreen.DeleteAccountConfirm },
+                    onLogoutClick = { currentScreen = AppScreen.LogoutConfirm }
+                )
+                ClearChatHistoryDialog(
+                    onDismiss = { currentScreen = AppScreen.Settings },
+                    onClearAll = {
+                        chatHistory.clear()
+                        currentScreen = AppScreen.Settings
+                    }
+                )
+            }
+            AppScreen.LogoutConfirm -> {
+                SettingsScreen(
+                    selectedLanguage = selectedLanguage,
+                    onBackClick = { currentScreen = AppScreen.Profile },
+                    onLanguageClick = { currentScreen = AppScreen.LanguageSelection },
+                    onChatHistoryClick = { currentScreen = AppHistoryScreen },
+                    onClearChatHistoryClick = { currentScreen = AppScreen.ClearChatHistory },
+                    onDeleteAccountClick = { currentScreen = AppScreen.DeleteAccountConfirm },
+                    onLogoutClick = { currentScreen = AppScreen.LogoutConfirm }
+                )
+                LogoutConfirmationDialog(
+                    onDismiss = { currentScreen = AppScreen.Settings },
+                    onLogout = { currentScreen = AppScreen.Welcome }
+                )
+            }
+            AppScreen.DeleteAccountConfirm -> {
+                SettingsScreen(
+                    selectedLanguage = selectedLanguage,
+                    onBackClick = { currentScreen = AppScreen.Profile },
+                    onLanguageClick = { currentScreen = AppScreen.LanguageSelection },
+                    onChatHistoryClick = { currentScreen = AppHistoryScreen },
+                    onClearChatHistoryClick = { currentScreen = AppScreen.ClearChatHistory },
+                    onDeleteAccountClick = { currentScreen = AppScreen.DeleteAccountConfirm },
+                    onLogoutClick = { currentScreen = AppScreen.LogoutConfirm }
+                )
+                DeleteAccountDialog(
+                    onDismiss = { currentScreen = AppScreen.Settings },
+                    onDeleteConfirm = { currentScreen = AppScreen.Welcome }
+                )
+            }
+            AppScreen.Visualizer -> {
+                VisualizerScreen(
+                    onChatClick = { currentScreen = AppScreen.Chat },
+                    onTopicsClick = { currentScreen = AppScreen.Topics },
+                    onPracticeClick = { currentScreen = AppScreen.Practice },
+                    onProfileClick = { currentScreen = AppScreen.Profile },
+                    onPlayClick = { title ->
+                        when {
+                            title.contains("Stack", ignoreCase = true) -> currentScreen = AppScreen.StackVisualizer
+                            title.contains("Queue", ignoreCase = true) -> currentScreen = AppScreen.QueueVisualizer
+                            title.contains("Linked List", ignoreCase = true) -> currentScreen = AppScreen.LinkedListVisualizer
+                            title.contains("Binary Tree Traversal", ignoreCase = true) -> currentScreen = AppScreen.BinaryTreeVisualizer
+                            title.contains("BST Insert / Delete", ignoreCase = true) -> currentScreen = AppScreen.BSTVisualizer
+                            title.contains("Graph BFS and DFS", ignoreCase = true) -> currentScreen = AppScreen.GraphVisualizer
+                            title.contains("Sorting Algorithms", ignoreCase = true) -> currentScreen = AppScreen.SortingVisualizer
+                            title.contains("Binary Search", ignoreCase = true) -> currentScreen = AppScreen.BinarySearchVisualizer
+                            title.contains("Heap Operations", ignoreCase = true) -> currentScreen = AppScreen.HeapVisualizer
+                            else -> Toast.makeText(context, "Visualization for $title coming soon!", Toast.LENGTH_SHORT).show()
+                        }
+                    }
+                )
+            }
+            AppScreen.StackVisualizer -> {
+                StackVisualizationScreen(
+                    onBackClick = { currentScreen = AppScreen.Visualizer },
+                    onChatClick = { currentScreen = AppScreen.Chat },
+                    onTopicsClick = { currentScreen = AppScreen.Topics },
+                    onPracticeClick = { currentScreen = AppScreen.Practice },
+                    onProfileClick = { currentScreen = AppScreen.Profile }
+                )
+            }
+            AppScreen.QueueVisualizer -> {
+                QueueVisualizationScreen(
+                    onBackClick = { currentScreen = AppScreen.Visualizer },
+                    onChatClick = { currentScreen = AppScreen.Chat },
+                    onTopicsClick = { currentScreen = AppScreen.Topics },
+                    onPracticeClick = { currentScreen = AppScreen.Practice },
+                    onProfileClick = { currentScreen = AppScreen.Profile }
+                )
+            }
+            AppScreen.LinkedListVisualizer -> {
+                LinkedListVisualizationScreen(
+                    onBackClick = { currentScreen = AppScreen.Visualizer },
+                    onChatClick = { currentScreen = AppScreen.Chat },
+                    onTopicsClick = { currentScreen = AppScreen.Topics },
+                    onPracticeClick = { currentScreen = AppScreen.Practice },
+                    onProfileClick = { currentScreen = AppScreen.Profile }
+                )
+            }
+            AppScreen.BinaryTreeVisualizer -> {
+                BinaryTreeVisualizationScreen(
+                    onBackClick = { currentScreen = AppScreen.Visualizer },
+                    onChatClick = { currentScreen = AppScreen.Chat },
+                    onTopicsClick = { currentScreen = AppScreen.Topics },
+                    onPracticeClick = { currentScreen = AppScreen.Practice },
+                    onProfileClick = { currentScreen = AppScreen.Profile }
+                )
+            }
+            AppScreen.BSTVisualizer -> {
+                BSTVisualizationScreen(
+                    onBackClick = { currentScreen = AppScreen.Visualizer },
+                    onChatClick = { currentScreen = AppScreen.Chat },
+                    onTopicsClick = { currentScreen = AppScreen.Topics },
+                    onPracticeClick = { currentScreen = AppScreen.Practice },
+                    onProfileClick = { currentScreen = AppScreen.Profile }
+                )
+            }
+            AppScreen.GraphVisualizer -> {
+                GraphVisualizationScreen(
+                    onBackClick = { currentScreen = AppScreen.Visualizer },
+                    onChatClick = { currentScreen = AppScreen.Chat },
+                    onTopicsClick = { currentScreen = AppScreen.Topics },
+                    onPracticeClick = { currentScreen = AppScreen.Practice },
+                    onProfileClick = { currentScreen = AppScreen.Profile }
+                )
+            }
+            AppScreen.SortingVisualizer -> {
+                SortingVisualizationScreen(
+                    onBackClick = { currentScreen = AppScreen.Visualizer },
+                    onChatClick = { currentScreen = AppScreen.Chat },
+                    onTopicsClick = { currentScreen = AppScreen.Topics },
+                    onPracticeClick = { currentScreen = AppScreen.Practice },
+                    onProfileClick = { currentScreen = AppScreen.Profile }
+                )
+            }
+            AppScreen.BinarySearchVisualizer -> {
+                BinarySearchVisualizationScreen(
+                    onBackClick = { currentScreen = AppScreen.Visualizer },
+                    onChatClick = { currentScreen = AppScreen.Chat },
+                    onTopicsClick = { currentScreen = AppScreen.Topics },
+                    onPracticeClick = { currentScreen = AppScreen.Practice },
+                    onProfileClick = { currentScreen = AppScreen.Profile }
+                )
+            }
+            AppScreen.HeapVisualizer -> {
+                HeapVisualizationScreen(
+                    onBackClick = { currentScreen = AppScreen.Visualizer },
+                    onChatClick = { currentScreen = AppScreen.Chat },
+                    onTopicsClick = { currentScreen = AppScreen.Topics },
+                    onPracticeClick = { currentScreen = AppScreen.Practice },
+                    onProfileClick = { currentScreen = AppScreen.Profile }
+                )
+            }
+            AppScreen.Practice -> {
+                PracticeScreen(
+                    onBackClick = { currentScreen = AppScreen.Chat },
+                    onChatClick = { currentScreen = AppScreen.Chat },
+                    onTopicsClick = { currentScreen = AppScreen.Topics },
+                    onVisualizerClick = { currentScreen = AppScreen.Visualizer },
+                    onProfileClick = { currentScreen = AppScreen.Profile },
+                    onGenerateQuizClick = { topic, difficulty ->
+                        selectedTopicName = topic
+                        selectedDifficulty = difficulty
+                        currentScreen = AppScreen.QuizContent
+                    }
+                )
+            }
+            AppScreen.QuizContent -> {
+                QuizContentScreen(
+                    topic = selectedTopicName,
+                    difficulty = selectedDifficulty,
+                    onBackClick = { currentScreen = AppScreen.Practice },
+                    onNewQuizClick = { currentScreen = AppScreen.Practice },
+                    onSubmitClick = { questions ->
+                        quizQuestions = questions
+                        currentScreen = AppScreen.QuizResult
+                    },
+                    onChatClick = { currentScreen = AppScreen.Chat },
+                    onTopicsClick = { currentScreen = AppScreen.Topics },
+                    onVisualizerClick = { currentScreen = AppScreen.Visualizer },
+                    onProfileClick = { currentScreen = AppScreen.Profile }
+                )
+            }
+            AppScreen.QuizResult -> {
+                QuizResultScreen(
+                    questions = quizQuestions,
+                    onBackClick = { currentScreen = AppScreen.Practice },
+                    onTryAgainClick = { currentScreen = AppScreen.QuizContent },
+                    onNewQuizClick = { currentScreen = AppScreen.Practice },
+                    onChatClick = { currentScreen = AppScreen.Chat },
+                    onTopicsClick = { currentScreen = AppScreen.Topics },
+                    onVisualizerClick = { currentScreen = AppScreen.Visualizer },
+                    onProfileClick = { currentScreen = AppScreen.Profile }
+                )
+            }
+        }
+    }
+}
